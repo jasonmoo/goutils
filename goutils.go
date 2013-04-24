@@ -33,15 +33,14 @@ func ByteSizeToHumanReadable(b uint64, precision int) string {
 func HumanReadableSizeToBytes(s string) (uint64, error) {
 
 	if i := strings.IndexAny(s, "bBkKmMgGtTpPeE"); i > -1 {
-		var m uint64
+		var m uint64 = 1
 		switch s[i] {
 			case 'k','K': m = uint64(1 << 10); break
 			case 'm','M': m = uint64(1 << 20); break
 			case 'g','G': m = uint64(1 << 30); break
 			case 't','T': m = uint64(1 << 40); break
 			case 'p','P': m = uint64(1 << 50); break
-			case 'e','E': m = uint64(1 << 60); break
-			default:  m = uint64(1)
+			case 'e','E': m = uint64(1 << 60)
 		}
 		num, err := strconv.ParseFloat(s[:i], 64)
 		if err == nil {
