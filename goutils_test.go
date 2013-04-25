@@ -2,6 +2,8 @@ package goutils
 
 import (
 	"testing"
+	"runtime"
+	"strings"
 )
 
 const (
@@ -11,6 +13,13 @@ const (
 type diffcase struct {
 	n    int
 	a, b []byte
+}
+
+func TestVersionInfo(t *testing.T) {
+	info := VersionInfo("test")
+	if !strings.Contains(info, "test") || !strings.Contains(info, runtime.Version()) {
+		t.Errorf("Version Info did not contain the expected info:\n%s", info)
+	}
 }
 
 func TestDiffBytes(t *testing.T) {
@@ -143,6 +152,13 @@ func TestIsPowerOf2(t *testing.T) {
 
 }
 
+func BenchmarkVersionInfo(b *testing.B) {
+
+	for i := 0; i < b.N; i++ {
+		VersionInfo("bench")
+	}
+
+}
 func BenchmarkZeroBytes(b *testing.B) {
 
 	b.StopTimer()

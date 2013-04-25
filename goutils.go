@@ -3,11 +3,19 @@ package goutils
 import (
 	"strconv"
 	"strings"
+	"runtime"
 )
 
 var (
 	SizeNames []string = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
 )
+
+func VersionInfo(extra string) string {
+	return strings.Join([]string{
+		"Go Version: " + runtime.Version(),
+		extra,
+	}, "\n")
+}
 
 // writes zeroes to every byte in []byte
 func ZeroBytes(b []byte) {
