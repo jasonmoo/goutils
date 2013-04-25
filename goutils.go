@@ -15,6 +15,7 @@ func ZeroBytes(b []byte) {
 		b[i] = byte(0)
 	}
 }
+
 // writes incrementing short as byte to []byte 0-255,0-255
 func FillBytes(b []byte) {
 	for i, l := 0, len(b); i < l; i++ {
@@ -36,13 +37,13 @@ func DiffBytes(a, b []byte) int {
 	return ct
 }
 
-
 // takes a number of bytes and outputs it in human readable format
 // ie: 1024 -> 1KB
 func ByteSizeToHumanReadable(b uint64, precision int) string {
 	const divisor float64 = float64(1024)
 	i, n := 0, float64(b)
-	for ; n >= divisor; i, n = i+1, n/divisor {}
+	for ; n >= divisor; i, n = i+1, n/divisor {
+	}
 	return strconv.FormatFloat(n, 'f', precision, 64) + SizeNames[i]
 }
 
@@ -71,4 +72,3 @@ func HumanReadableSizeToBytes(s string) (uint64, error) {
 func IsPowerOf2(i uint) bool {
 	return bool((i == 1 || (i-1)&i == 0) && i != 0)
 }
-

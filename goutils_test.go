@@ -8,8 +8,8 @@ const (
 	onemb int = 1 << 20
 )
 
-type diffcase struct{
-	n int
+type diffcase struct {
+	n    int
 	a, b []byte
 }
 
@@ -20,8 +20,8 @@ func TestDiffBytes(t *testing.T) {
 
 	cases := []diffcase{
 		{0, []byte{0}, []byte{0}},
-		{3, []byte{0,0,0}, []byte{1,1,1}},
-		{1, []byte{0,1,1}, []byte{1,1,1}},
+		{3, []byte{0, 0, 0}, []byte{1, 1, 1}},
+		{1, []byte{0, 1, 1}, []byte{1, 1, 1}},
 		{1, []byte{0}, []byte{1}},
 	}
 
@@ -60,29 +60,28 @@ func TestFillBytes(t *testing.T) {
 
 }
 
-
 func TestByteSizeToHumanReadable(t *testing.T) {
 
 	// safe to run in parallel
 	t.Parallel()
 
 	cases := map[uint64]string{
-		uint64(0): "0B",
-		uint64(13): "13B",
-		uint64(1 << 10): "1KB",
-		uint64(onemb): "1MB",
-		uint64(1 << 30): "1GB",
-		uint64(1 << 40): "1TB",
-		uint64(1 << 50): "1PB",
-		uint64(1 << 60): "1EB",
-		uint64(42675243822): "39.74GB",
-		uint64(55555): "54.25KB",
+		uint64(0):                 "0B",
+		uint64(13):                "13B",
+		uint64(1 << 10):           "1KB",
+		uint64(onemb):             "1MB",
+		uint64(1 << 30):           "1GB",
+		uint64(1 << 40):           "1TB",
+		uint64(1 << 50):           "1PB",
+		uint64(1 << 60):           "1EB",
+		uint64(42675243822):       "39.74GB",
+		uint64(55555):             "54.25KB",
 		uint64(11111111111111111): "9.87PB",
 	}
 
 	for b, name := range cases {
 		precision := 0
-		if b > 1024 && b % 1024 > 0 {
+		if b > 1024 && b%1024 > 0 {
 			precision = 2
 		}
 		if h := ByteSizeToHumanReadable(b, precision); h != name {
@@ -98,17 +97,17 @@ func TestHumanReadableSizeToBytes(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]uint64{
-		"0B": uint64(0),
-		"13B": uint64(13),
-		"1KB": uint64(1 << 10),
-		"1MB": uint64(onemb),
-		"1GB": uint64(1 << 30),
-		"1TB": uint64(1 << 40),
-		"1PB": uint64(1 << 50),
-		"1EB": uint64(1 << 60),
+		"0B":      uint64(0),
+		"13B":     uint64(13),
+		"1KB":     uint64(1 << 10),
+		"1MB":     uint64(onemb),
+		"1GB":     uint64(1 << 30),
+		"1TB":     uint64(1 << 40),
+		"1PB":     uint64(1 << 50),
+		"1EB":     uint64(1 << 60),
 		"39.74GB": uint64(42670500085),
 		"54.25KB": uint64(55552),
-		"9.87PB": uint64(11112632080536698),
+		"9.87PB":  uint64(11112632080536698),
 	}
 
 	for name, b := range cases {
@@ -128,14 +127,13 @@ func TestIsPowerOf2(t *testing.T) {
 	t.Parallel()
 
 	cases := map[uint]bool{
-		uint(0): false,
-		uint(1): true,
-		uint(3): false,
-		uint(4): true,
-		uint(8): true,
+		uint(0):    false,
+		uint(1):    true,
+		uint(3):    false,
+		uint(4):    true,
+		uint(8):    true,
 		uint(1024): true,
 	}
-
 
 	for i, tf := range cases {
 		if p := IsPowerOf2(i); p != tf {
@@ -144,8 +142,6 @@ func TestIsPowerOf2(t *testing.T) {
 	}
 
 }
-
-
 
 func BenchmarkZeroBytes(b *testing.B) {
 
@@ -174,9 +170,10 @@ func BenchmarkDiffBytes(b *testing.B) {
 	b.StopTimer()
 	aa, bb := make([]byte, onemb), make([]byte, onemb)
 	b.SetBytes(int64(onemb * b.N))
-	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		DiffBytes(aa,bb)
+		b.StartTimer()
+		DiffBytes(aa, bb)
+		b.StopTimer()
 	}
 
 }
@@ -185,7 +182,7 @@ func BenchmarkByteSizeToHumanReadable(b *testing.B) {
 	b.StopTimer()
 
 	ct := 0
-	for size := uint64(1); size < 1 << 10; size<<=1 {
+	for size := uint64(1); size < 1<<10; size <<= 1 {
 		for i := 0; i < b.N/2; i++ {
 			b.StartTimer()
 			name := ByteSizeToHumanReadable(size, 0)
@@ -208,7 +205,7 @@ func BenchmarkHumanReadableSizeToBytes(b *testing.B) {
 	b.StopTimer()
 
 	ct := 0
-	for size := uint64(1); size < 1 << 10; size<<=1 {
+	for size := uint64(1); size < 1<<10; size <<= 1 {
 		name := ByteSizeToHumanReadable(size, 2)
 		for i := 0; i < b.N; i++ {
 			b.StartTimer()
