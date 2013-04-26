@@ -10,6 +10,20 @@ var (
 	SizeNames []string = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
 )
 
+type MultiValue []string
+func (mv *MultiValue) String() string {
+	return strings.Join(*mv, ",")
+}
+func (mv *MultiValue) Set(value string) error {
+	for _, s := range strings.Split(value, ",") {
+		name := strings.TrimSpace(s)
+		if len(name) > 0 {
+			*mv = append(*mv, name)
+		}
+	}
+	return nil
+}
+
 func VersionInfo(extra string) string {
 	return strings.Join([]string{
 		"Go Version: " + runtime.Version(),

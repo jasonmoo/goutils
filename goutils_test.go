@@ -1,9 +1,9 @@
 package goutils
 
 import (
-	"testing"
 	"runtime"
 	"strings"
+	"testing"
 )
 
 const (
@@ -13,6 +13,31 @@ const (
 type diffcase struct {
 	n    int
 	a, b []byte
+}
+
+func TestMultiValue(t *testing.T) {
+
+	cases := map[string][]string{
+		"1,2,3":    []string{"1", "2", "3"},
+		"1,2,,3":   []string{"1", "2", "3"},
+		"1,2,":     []string{"1", "2"},
+		"1,  2, 3": []string{"1", "2", "3"},
+		"1,2,3,":   []string{"1", "2", "3"},
+	}
+
+	for input, output := range cases {
+		v := MultiValue{}
+		v.Set(input)
+
+		if len(v) != len(output) {
+			t.Errorf("Expected length %d, got: %d\n", len(output), len(v))
+		}
+
+		if v.String() != strings.Join(output, ",") {
+			t.Errorf("Expected '%s', got: %v\n", input, v)
+		}
+	}
+
 }
 
 func TestVersionInfo(t *testing.T) {
