@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"runtime"
+	"sync/atomic"
 )
 
 var (
@@ -23,6 +24,35 @@ func (mv *MultiValue) Set(value string) error {
 	}
 	return nil
 }
+
+type AtomicUInt64CommaStringer uint64
+func (i *AtomicUInt64CommaStringer) Add(delta int) uint64 {
+	return atomic.AddUint64((*uint64)(i), uint64(delta))
+}
+func (acs *AtomicUInt64CommaStringer) String() string {
+
+	// make the number a string
+	n := strconv.FormatUint(atomic.LoadUint64((*uint64)(acs)), 10)
+
+	if len(n) < 4 {
+		return n
+	}
+
+	// max uint64 len("18,446,744,073,709,551,615") == 27
+	nbuf, l, start := make([]byte, 27), len(n), len(n)%3
+
+	// write out the leading digits
+	copy(nbuf[:start], n[:start])
+
+	// write out the rest
+	var i, ii int
+	for i, ii = start, start; i < l; i, ii = i+3, ii+4 {
+		nbuf[ii], nbuf[ii+1], nbuf[ii+2], nbuf[ii+3] = ',', n[i], n[i+1], n[i+2]
+	}
+
+	return string(nbuf[:ii])
+}
+
 
 func VersionInfo(extra string) string {
 	return strings.Join([]string{

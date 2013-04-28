@@ -4,6 +4,9 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"strconv"
+	"sync/atomic"
+	"sync"
 )
 
 const (
@@ -39,6 +42,38 @@ func TestMultiValue(t *testing.T) {
 	}
 
 }
+
+func TestAtomicUInt64CommaStringer(t *testing.T) {
+
+	cases := map[AtomicUInt64CommaStringer]string{
+		AtomicUInt64CommaStringer(1): "1",
+		AtomicUInt64CommaStringer(999): "999",
+		AtomicUInt64CommaStringer(1001): "1,001",
+		AtomicUInt64CommaStringer(18446744073709551615): "18,446,744,073,709,551,615",
+	}
+
+	for input, output := range cases {
+		if input.String() != output {
+			t.Errorf("String Test: expected %#v  got: %#v", output, input.String())
+		}
+	}
+
+	v := AtomicUInt64CommaStringer(0)
+	if s := v.String(); s != "0" {
+		t.Errorf("Adding Test: expected \"0\"  got: %#v", s)
+	}
+	v.Add(1)
+	if s := v.String(); s != "1" {
+		t.Errorf("Adding Test: expected \"1\"  got: %#v", s)
+	}
+	v.Add(1)
+	if s := v.String(); s != "2" {
+		t.Errorf("Adding Test: expected \"2\"  got: %#v", s)
+	}
+
+
+}
+
 
 func TestVersionInfo(t *testing.T) {
 	info := VersionInfo("test")
@@ -173,6 +208,49 @@ func TestIsPowerOf2(t *testing.T) {
 		if p := IsPowerOf2(i); p != tf {
 			t.Errorf("Incorrect determination:  Expected %t, got %t for %d", tf, p, i)
 		}
+	}
+
+}
+
+func BenchmarkStandardUInt64Adder(b *testing.B) {
+
+	for i := uint64(0); i < uint64(b.N); i+=uint64(1) {}
+
+}
+func BenchmarkAtomicUInt64Adder(b *testing.B) {
+
+	for i := uint64(0); i < uint64(b.N); atomic.AddUint64(&i,1) {}
+
+}
+func BenchmarkMutexedUInt64Adder(b *testing.B) {
+	var m sync.Mutex
+	for i := uint64(0); i < uint64(b.N); {
+		m.Lock()
+		i++
+		m.Unlock()
+	}
+
+}
+
+
+func BenchmarkAtomicUInt64CommaStringerAdder(b *testing.B) {
+
+	for i := AtomicUInt64CommaStringer(0); i < AtomicUInt64CommaStringer(b.N); i.Add(1) {}
+
+}
+
+func BenchmarkFormatUint64(b *testing.B) {
+
+	for i := uint64(0); i < uint64(b.N); i+=uint64(1) {
+		strconv.FormatUint(i, 10)
+	}
+
+}
+func BenchmarkAtomicUInt64CommaStringerStringer(b *testing.B) {
+
+	for i := 0; i < b.N; i++ {
+		v := AtomicUInt64CommaStringer(i)
+		v.String()
 	}
 
 }
