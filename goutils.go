@@ -11,7 +11,12 @@ var (
 	SizeNames []string = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
 )
 
-type MultiValue []string
+type (
+	MultiValue []string
+	AtomicUInt64CommaStringer uint64
+)
+
+
 func (mv *MultiValue) String() string {
 	return strings.Join(*mv, ",")
 }
@@ -25,7 +30,6 @@ func (mv *MultiValue) Set(value string) error {
 	return nil
 }
 
-type AtomicUInt64CommaStringer uint64
 func (i *AtomicUInt64CommaStringer) Add(delta int) uint64 {
 	return atomic.AddUint64((*uint64)(i), uint64(delta))
 }
