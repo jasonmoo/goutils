@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync/atomic"
 	"sync"
+	"expvar"
 )
 
 const (
@@ -43,36 +44,6 @@ func TestMultiValue(t *testing.T) {
 
 }
 
-func TestAtomicUInt64CommaStringer(t *testing.T) {
-
-	cases := map[AtomicUInt64CommaStringer]string{
-		AtomicUInt64CommaStringer(1): "1",
-		AtomicUInt64CommaStringer(999): "999",
-		AtomicUInt64CommaStringer(1001): "1,001",
-		AtomicUInt64CommaStringer(18446744073709551615): "18,446,744,073,709,551,615",
-	}
-
-	for input, output := range cases {
-		if input.String() != output {
-			t.Errorf("String Test: expected %#v  got: %#v", output, input.String())
-		}
-	}
-
-	v := AtomicUInt64CommaStringer(0)
-	if s := v.String(); s != "0" {
-		t.Errorf("Adding Test: expected \"0\"  got: %#v", s)
-	}
-	v.Add(1)
-	if s := v.String(); s != "1" {
-		t.Errorf("Adding Test: expected \"1\"  got: %#v", s)
-	}
-	v.Add(1)
-	if s := v.String(); s != "2" {
-		t.Errorf("Adding Test: expected \"2\"  got: %#v", s)
-	}
-
-
-}
 
 
 func TestVersionInfo(t *testing.T) {
@@ -212,14 +183,32 @@ func TestIsPowerOf2(t *testing.T) {
 
 }
 
+func BenchmarkStandardLoop(b *testing.B) {
+
+	for i := 0; i < b.N; i++ {}
+
+}
+func BenchmarkStandardLoopFloatCasting(b *testing.B) {
+
+	for i := float64(0); i < float64(b.N); i++ {}
+
+}
 func BenchmarkStandardUInt64Adder(b *testing.B) {
 
-	for i := uint64(0); i < uint64(b.N); i+=uint64(1) {}
+	for i := uint64(0); i < uint64(b.N); i++ {}
 
 }
 func BenchmarkAtomicUInt64Adder(b *testing.B) {
 
 	for i := uint64(0); i < uint64(b.N); atomic.AddUint64(&i,1) {}
+
+}
+var expint *expvar.Int = expvar.NewInt("my var")
+func BenchmarkExpvarInt64Adder(b *testing.B) {
+
+	for i := 0; i < b.N; i++ {
+		expint.Add(int64(i))
+	}
 
 }
 func BenchmarkMutexedUInt64Adder(b *testing.B) {
@@ -231,11 +220,47 @@ func BenchmarkMutexedUInt64Adder(b *testing.B) {
 	}
 
 }
+func BenchmarkRWMutexedUInt64Adder(b *testing.B) {
+	var m sync.RWMutex
+	for i := uint64(0); i < uint64(b.N); {
+		m.Lock()
+		i++
+		m.Unlock()
+	}
 
+}
+func BenchmarkDeferredMutexedUInt64Adder(b *testing.B) {
+	var m sync.Mutex
+	for i := uint64(0); i < uint64(b.N); {
+		func() {
+			defer m.Unlock()
+			m.Lock()
+			i++
+		}()
+	}
 
-func BenchmarkAtomicUInt64CommaStringerAdder(b *testing.B) {
+}
+func BenchmarkDeferredRWMutexedUInt64Adder(b *testing.B) {
+	var m sync.RWMutex
+	for i := uint64(0); i < uint64(b.N); {
+		func() {
+			defer m.Unlock()
+			m.Lock()
+			i++
+		}()
+	}
 
-	for i := AtomicUInt64CommaStringer(0); i < AtomicUInt64CommaStringer(b.N); i.Add(1) {}
+}
+func BenchmarkChannelUInt64Adder(b *testing.B) {
+	b.StopTimer()
+
+	i, c := uint64(0), make(chan uint64)
+	go func() { for { i += <- c } }()
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		c <- uint64(i)
+	}
 
 }
 
@@ -243,14 +268,6 @@ func BenchmarkFormatUint64(b *testing.B) {
 
 	for i := uint64(0); i < uint64(b.N); i+=uint64(1) {
 		strconv.FormatUint(i, 10)
-	}
-
-}
-func BenchmarkAtomicUInt64CommaStringerStringer(b *testing.B) {
-
-	for i := 0; i < b.N; i++ {
-		v := AtomicUInt64CommaStringer(i)
-		v.String()
 	}
 
 }
